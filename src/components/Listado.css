@@ -1,0 +1,54 @@
+:root {
+  --color-primary: #15314c; /* navy */
+  --color-secondary: #e5b53e; /* amarillo */
+}
+
+/* Contenedor de toda la lista en modo vertical */
+.mini-carousel.vertical {
+  background-color: var(--color-primary); /* fondo primario */
+  padding: 2rem 0;
+}
+
+/* Título centrado y en color secundario */
+.mini-title {
+  text-align: center;
+  color: var(--color-secondary);
+  font-family: "Montserrat", "Inter", Arial, sans-serif;
+  font-weight: 800;
+  margin: 0;
+}
+
+/* Lista vertical de cards */
+.mini-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 1rem;
+}
+@media (min-width: 700px) {
+  .mini-list {
+    gap: 16px;
+    padding: 0 2rem;
+  }
+}
+
+/* Card adaptada a columna */
+.mini-card {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.mini-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-secondary);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Por si quedaban estilos del carrusel anterior */
+.mini-carousel .mc-nav,
+.mini-carousel-track {
+  display: none !important;
+}

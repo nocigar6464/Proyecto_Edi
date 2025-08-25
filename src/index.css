@@ -1,0 +1,63 @@
+/* Colores corporativos (si no los tienes ya) */
+:root {
+  --color-primary: #15314c; /* navy */
+  --color-secondary: #e5b53e; /* amarillo */
+}
+
+/* Navbar CanLAB */
+.navbar-canlab {
+  background-color: var(--color-primary) !important;
+}
+/*suavisa el scroll cuando ocupo react router dom*/
+html {
+  scroll-behavior: smooth;
+}
+
+/* Texto por defecto en blanco */
+.navbar-canlab .navbar-brand,
+.navbar-canlab .nav-link {
+  color: #ffffff !important;
+}
+
+/* Hover en amarillo */
+.navbar-canlab .navbar-brand:hover,
+.navbar-canlab .nav-link:hover {
+  color: var(--color-secondary) !important;
+}
+/* Botón grande con color secundario */
+.btn-brand-secondary {
+  background-color: var(--color-secondary) !important; /* #e5b53e */
+  border-color: var(--color-secondary) !important;
+  color: var(--color-primary) !important; /* #15314c */
+}
+.btn-brand-secondary:hover,
+.btn-brand-secondary:focus {
+  filter: brightness(0.92);
+}
+
+/* Aumenta el tamaño del botón (más grande que btn-lg) */
+.btn-xl {
+  padding: 0.9rem 1.6rem;
+  font-size: 1.25rem;
+  border-radius: 0.75rem;
+}
+
+/* Título en amarillo con fuente Yusei Magic */
+.tagline-yusei {
+  color: var(--color-secondary);
+  font-family: "Yusei Magic", Arial, sans-serif;
+  font-weight: 400; /* Yusei Magic es single-weight */
+  margin-top: 0.5rem;
+  text-align: center; /* quítalo si no lo quieres centrado */
+}
+
+/* Alto consistente del slide con la lata */
+.carousel-can-slide {
+  min-height: clamp(380px, 60vh, 560px);
+  background: #fff; /* o un degradado si quieres */
+}
+
+/* Asegura que el caption quede delante si se superpone */
+.carousel-caption {
+  z-index: 5;
+}

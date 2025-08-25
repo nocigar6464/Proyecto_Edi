@@ -1,0 +1,45 @@
+:root {
+  --color-primary: #15314c; /* navy */
+  --color-secondary: #e5b53e; /* amarillo */
+}
+
+.projects-section {
+  padding: 2rem 0;
+  background: #fff;
+}
+
+.projects-title {
+  text-align: center;
+  color: var(--color-secondary); /* título en amarillo */
+  font-family: "Montserrat", "Inter", Arial, sans-serif;
+  font-weight: 800;
+  margin: 0 0 1rem 0;
+}
+
+/* Cada tarjeta mantiene un espacio fijo (todas iguales) */
+.project-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3; /* ajusta a 1/1 si prefieres cuadrado */
+  overflow: hidden;
+  border-radius: 16px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+  background: #f6f7f9;
+}
+
+/* Aplica lo mismo a <img> y <video> */
+.project-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* rellena sin deformar */
+  border-radius: 16px;
+}
+
+/* Respeta preferencia de reducción de movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .project-media {
+    animation: none !important;
+  }
+}

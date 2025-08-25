@@ -1,0 +1,9 @@
+.icon-step {
+  color: #15314c; /* navy por defecto */
+  transition: color 0.3s ease;
+  cursor: pointer;
+}
+
+.icon-step:hover {
+  color: #e5b53e; /* amarillo al pasar el mouse */
+}

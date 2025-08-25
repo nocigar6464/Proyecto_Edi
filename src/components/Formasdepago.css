@@ -1,0 +1,60 @@
+/* Si NO tienes estas variables en tu CSS global, deja este bloque aquí.
+   Si ya están en index.css, puedes omitirlo. */
+:root {
+  --color-primary: #15314c; /* navy */
+  --color-secondary: #e5b53e; /* amarillo */
+}
+/* contenedor raiz*/
+.mc-hz {
+  position: relative;
+  background: #fff;
+  padding: 1rem 0;
+  margin: 50px 0; /* margen top y bottom de 50px */
+}
+/* Título: centrado y amarillo */
+.mc-hz__title {
+  text-align: center;
+  color: var(--color-secondary);
+  font-family: "Montserrat", "Inter", Arial, sans-serif;
+  font-weight: 800;
+  margin: 0 0 1rem 0;
+}
+
+/* Pista horizontal centrada y con espacio entre cards (sin cambios funcionales) */
+.mc-hz__track {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  align-items: stretch;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 3.5rem;
+  scroll-padding-inline: 3.5rem;
+  scrollbar-width: none;
+}
+.mc-hz__track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Cards: borde amarillo y más grueso */
+.mc-hz__card {
+  flex: 0 0 clamp(180px, 22vw, 240px);
+  scroll-snap-align: center;
+  border: 10px solid var(--color-secondary); /* antes 2px y color primario */
+  border-radius: 14px;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hover (opcional): mantenemos amarillo y solo elevamos la card */
+.mc-hz__card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* (Opcional) un poco más de espacio en pantallas grandes */
+@media (min-width: 992px) {
+  .mc-hz__track {
+    gap: 20px;
+  }
+}
