@@ -5,23 +5,29 @@ import "./Ejemplosproyectos.css";
 
 // IMÁGENES
 import cervezaLajoda from "../assets/images/cerveza_lajoda.jpeg";
-import espresso1 from "../assets/images/onze_espressomartini.jpeg";
-import piscosour1 from "../assets/images/onze_piscosour.jpeg";
+import espresso1 from "../assets/images/ejemplo_martini.png";
+import piscosour1 from "../assets/images/ejemplo_piscosour.png";
 import matri1 from "../assets/images/matrimonio.jpg";
-import coldbrew1 from "../assets/images/coldbrewcoffee.jpg";
+import craftcola from "../assets/images/ejemplo_craft_cola.png";
+import craftorange from "../assets/images/ejemplo_orange_spritz.png";
+import craftlemon from "../assets/images/ejemplo_ginger.png";
 
 // VIDEO (IMPORTA el mp4)
 import espressoVideo from "../assets/videos/espresso-martini.mp4";
 import coldbrewvideo1 from "../assets/videos/coldbrew.mp4";
+import gintonicvideo from "../assets/videos/video_gin.mp4";
 
 const proyectos = [
   { type: "video", src: espressoVideo, alt: "video espresso martini" },
-  { type: "image", src: coldbrew1, alt: "Café prensado en frío" },
-  { type: "video", src: coldbrewvideo1, alt: "Video cold brew" },
-  { type: "image", src: cervezaLajoda, alt: "Cerveza" },
-  { type: "image", src: espresso1, alt: "Espresso Martini" },
+  { type: "image", src: craftorange, alt: "Bebida naranja artesanal" },
   { type: "image", src: piscosour1, alt: "Pisco Sour" },
   { type: "image", src: matri1, alt: "Recuerdo matrimonio" },
+  { type: "image", src: cervezaLajoda, alt: "Cerveza" },
+  { type: "image", src: espresso1, alt: "Espresso Martini" },
+  { type: "video", src: coldbrewvideo1, alt: "Video cold brew" },
+  { type: "image", src: craftcola, alt: "Coca cola artesanal" },
+  { type: "video", src: gintonicvideo, alt: "Video gin tonic" },
+  { type: "image", src: craftlemon, alt: "Bebida artesanal limon" },
 ];
 
 export default function Ejemploproyectos() {

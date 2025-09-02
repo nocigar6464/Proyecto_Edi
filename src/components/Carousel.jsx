@@ -5,7 +5,8 @@ import Button from "react-bootstrap/Button";
 
 // IMPORTA las imágenes (ajusta la ruta según tu estructura real)
 import gondola2 from "../assets/images/gondola2.png";
-import coldbrew from "../assets/images/coldbrew.png";
+import craftbanana from "../assets/images/craft_banana.png";
+import coldbrew from "../assets/images/coldbrew1.png";
 
 export default function CanlabCarousel() {
   return (
@@ -14,23 +15,21 @@ export default function CanlabCarousel() {
         <ExampleCarouselImage src={gondola2} alt="Góndola" />
         <Carousel.Caption>
           <Button
-            className="btn-brand-secondary btn-xl"
+            className="btn-brand-white btn-xxl"
             href="mailto:eduardo.schwerter@gmail.com?subject=CanLAB&body=Hola, quiero más información.">
             Cotiza
           </Button>
-          <h1 className="tagline-yusei">Tu idea en una lata</h1>
         </Carousel.Caption>
       </Carousel.Item>
 
       <Carousel.Item>
-        <ExampleCarouselImage src={gondola2} alt="Góndola" />
+        <ExampleCarouselImage src={craftbanana} alt="Bebida funcional" />
         <Carousel.Caption>
           <Button
-            className="btn-brand-secondary btn-xl"
+            className="btn-brand-white btn-xxl"
             href="mailto:eduardo.schwerter@gmail.com?subject=CanLAB&body=Hola, quiero más información.">
             Cotiza
           </Button>
-          <h1 className="tagline-yusei">Tu idea en una lata</h1>
         </Carousel.Caption>
       </Carousel.Item>
 
@@ -38,11 +37,10 @@ export default function CanlabCarousel() {
         <ExampleCarouselImage src={coldbrew} alt="Imagen cold brew coffee" />
         <Carousel.Caption>
           <Button
-            className="btn-brand-secondary btn-xl"
+            className="btn-brand-white btn-xxl"
             href="mailto:eduardo.schwerter@gmail.com?subject=CanLAB&body=Hola, quiero más información.">
             Cotiza
           </Button>
-          <h1 className="tagline-yusei">Tu idea en una lata</h1>
         </Carousel.Caption>
       </Carousel.Item>
     </Carousel>

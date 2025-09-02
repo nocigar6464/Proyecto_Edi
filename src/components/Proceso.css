@@ -7,3 +7,8 @@
 .icon-step:hover {
   color: #e5b53e; /* amarillo al pasar el mouse */
 }
+
+.step-100 {
+  height: 100px; /* alto fijo para todo el contenido del item */
+  width: 100%; /* ocupa el ancho del Col */
+}

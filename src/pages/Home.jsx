@@ -1,4 +1,5 @@
 import React from "react";
+import Hero from "../components/Hero.jsx";
 import Carousel from "../components/Carousel.jsx";
 import Proceso from "../components/Proceso.jsx";
 import Listado from "../components/Listado.jsx";
@@ -11,7 +12,9 @@ export default function Home() {
       <section id="hero">
         <Carousel />
       </section>
-
+      <section id="frase">
+        <Hero />
+      </section>
       <section id="proceso">
         <Proceso />
       </section>

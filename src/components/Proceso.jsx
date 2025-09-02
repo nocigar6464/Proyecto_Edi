@@ -24,7 +24,7 @@ export default function Proceso() {
       <Row className="text-center gy-3">
         {steps.map((s, i) => (
           <Col key={i} xs={6} md={3}>
-            <div className="d-flex flex-column align-items-center">
+            <div className="step-100 d-flex flex-column align-items-center justify-content-center">
               <FontAwesomeIcon
                 icon={s.icon}
                 size="2x"
