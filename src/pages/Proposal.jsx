@@ -1,18 +1,17 @@
 // src/pages/Proposal.jsx
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Container, Card } from "react-bootstrap";
 import Financiamiento from "../components/Financiamiento";
 import Listado from "../components/Listado";
+import { loadWizard } from "../services/wizardStore";
+
+const API_URL = import.meta.env.VITE_API_URL || ""; // ej. http://localhost:3000
 
 function pickImage(branch, answers) {
   if (branch === "ready") {
     if (answers.sabor === "Gin Tonic") {
-      if (
-        String(answers.formato || "")
-          .toLowerCase()
-          .includes("350")
-      )
+      if (String(answers.formato || "").toLowerCase().includes("350"))
         return "/images/proposal/ready-gintonic-350.jpg";
       return "/images/proposal/ready-gintonic.jpg";
     }
@@ -27,7 +26,6 @@ function pickImage(branch, answers) {
 }
 
 function extractCantidad(branch, answers) {
-  // ready usa "cantidad" (litros). beer/coldbrew usan "Cantidad a producir" (latas)
   return (
     answers.cantidad ||
     answers["Cantidad a producir"] ||
@@ -36,7 +34,6 @@ function extractCantidad(branch, answers) {
   );
 }
 
-// Construye el detalle que va justo después de {branchLabel}
 function buildDetails(branch, answers) {
   const orderMap = {
     ready: ["sabor", "formato"],
@@ -50,40 +47,50 @@ function buildDetails(branch, answers) {
   return vals.join(" · ");
 }
 
-// Verifica cookie de autenticación puesta por verify.php (dominio real)
-function hasAuthCookie() {
-  return document.cookie.split("; ").some((c) => c.startsWith("canlab_auth=1"));
-}
-
 export default function Proposal() {
   const { state } = useLocation();
   const navigate = useNavigate();
 
-  // 1) Proteger ruta: si no hay cookie de verificación, ir a /login
+  // estado de autenticación: null=pending, true=ok, false=fail
+  const [authOk, setAuthOk] = useState(null);
+
+  // 1) Proteger ruta: validar sesión contra el backend (cookie httpOnly)
   useEffect(() => {
-    if (!hasAuthCookie()) navigate("/login");
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/auth/status`, {
+          credentials: "include",
+        });
+        const data = await res.json().catch(() => ({}));
+        const ok = Boolean(data?.authenticated);
+        if (!mounted) return;
+        setAuthOk(ok);
+        if (!ok) navigate("/login");
+      } catch {
+        if (!mounted) return;
+        setAuthOk(false);
+        navigate("/login");
+      }
+    })();
+    return () => { mounted = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 2) Si no viene state (caso típico tras clic del mail), recuperar wizardData del sessionStorage
+  // 2) Si no viene state (tras clic del mail), recupera del store (session/local)
   const data = useMemo(() => {
     if (state?.answers) return state;
-    try {
-      const stored = sessionStorage.getItem("wizardData");
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
+    return loadWizard();
   }, [state]);
 
-  // 3) Si (aun verificado) no hay datos de propuesta, volver al cotizador
+  // 3) Si autenticado pero sin datos, volver al cotizador
   useEffect(() => {
-    if (hasAuthCookie() && !data?.answers) {
-      navigate("/cotizador");
-    }
+    if (authOk && !data?.answers) navigate("/cotizador");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+  }, [authOk, data]);
 
+  // Espera a que termine la validación de sesión
+  if (authOk === null) return null;
   if (!data?.answers) return null;
 
   const { branch, branchLabel, answers } = data;
@@ -99,10 +106,7 @@ export default function Proposal() {
         <h2 className="h4 mb-3 text-center">
           Tu producción de <strong>{branchLabel}</strong>
           {details && (
-            <>
-              {" "}
-              — <span className="text-muted">{details}</span>
-            </>
+            <> — <span className="text-muted">{details}</span></>
           )}
         </h2>
 

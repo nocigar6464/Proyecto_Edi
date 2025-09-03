@@ -3,6 +3,9 @@ import Container from "react-bootstrap/Container";
 import Alert from "react-bootstrap/Alert";
 import Button from "react-bootstrap/Button";
 
+const API_URL = import.meta.env.VITE_API_URL ?? ""; // ej. http://localhost:3000
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY ?? "";
+
 export default function Contacto() {
   const [form, setForm] = useState({
     name: "",
@@ -15,16 +18,25 @@ export default function Contacto() {
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  // reCAPTCHA v3 opcional: devuelve token o null si no está disponible
+  const getRecaptchaToken = async () => {
+    try {
+      if (!RECAPTCHA_SITE_KEY || !window.grecaptcha) return null;
+      await window.grecaptcha.ready?.();
+      const token = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "contact" });
+      return token || null;
+    } catch {
+      return null;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus({ type: "", msg: "" });
 
     // Validaciones simples
     if (!form.name || !form.email || !form.message /* || !form.phone */) {
-      setStatus({
-        type: "danger",
-        msg: "Por favor completa los campos obligatorios.",
-      });
+      setStatus({ type: "danger", msg: "Por favor completa los campos obligatorios." });
       return;
     }
     const okEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
@@ -32,7 +44,6 @@ export default function Contacto() {
       setStatus({ type: "danger", msg: "Ingresa un correo válido." });
       return;
     }
-    // Teléfono opcional
     if (form.phone && !/^[-+() 0-9]{6,20}$/.test(form.phone)) {
       setStatus({ type: "danger", msg: "Ingresa un teléfono válido." });
       return;
@@ -41,39 +52,29 @@ export default function Contacto() {
     try {
       setLoading(true);
 
-      // ⬇️ Envío como form-data (coincide con tu prueba cURL #1)
-      const fd = new FormData();
-      fd.append("name", form.name);
-      fd.append("email", form.email);
-      fd.append("phone", form.phone);
-      fd.append("message", form.message);
+      // token reCAPTCHA si está disponible (opcional)
+      const recaptchaToken = await getRecaptchaToken();
 
-      const res = await fetch("/contact.php", {
+      // Envío a nuestro backend (JSON)
+      const res = await fetch(`${API_URL}/api/contact`, {
         method: "POST",
-        // IMPORTANTE: sin headers 'Content-Type'; el navegador los pone con boundary
-        body: fd,
+        headers: { "Content-Type": "application/json" },
+        // el backend acepta campos extra; 'phone' es opcional
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          message: form.message,
+          phone: form.phone || undefined,
+          recaptchaToken: recaptchaToken || undefined,
+        }),
       });
 
-      // Si el servidor redirige (301/302), algunos hosts cambian a GET.
-      // En la misma raíz no debería pasar, pero por si acaso:
-      if (!res.ok) {
-        // Intenta leer JSON de error si viene
-        let errText = "Error enviando el mensaje";
-        try {
-          const maybe = await res.json();
-          if (maybe?.error) errText = maybe.error;
-        } catch (_) {}
-        throw new Error(errText);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || "Error enviando el mensaje");
       }
 
-      const data = await res.json();
-      if (!data?.ok)
-        throw new Error(data?.error || "Error enviando el mensaje");
-
-      setStatus({
-        type: "success",
-        msg: "¡Mensaje enviado! Te contactaremos pronto.",
-      });
+      setStatus({ type: "success", msg: "¡Mensaje enviado! Te contactaremos pronto." });
       setForm({ name: "", email: "", phone: "", message: "" });
     } catch (err) {
       setStatus({
@@ -89,9 +90,7 @@ export default function Contacto() {
 
   return (
     <Container className="py-5" style={{ maxWidth: 720 }}>
-      <h1 className="mb-4" style={{ color: "var(--color-secondary)" }}>
-        Contáctanos
-      </h1>
+      <h1 className="mb-4" style={{ color: "var(--color-secondary)" }}>Contáctanos</h1>
 
       {status.msg && (
         <Alert variant={status.type} role="alert" aria-live="polite">
@@ -101,9 +100,7 @@ export default function Contacto() {
 
       <form onSubmit={handleSubmit} noValidate>
         <div className="mb-3">
-          <label className="form-label" htmlFor="name">
-            Nombre*
-          </label>
+          <label className="form-label" htmlFor="name">Nombre*</label>
           <input
             id="name"
             className="form-control"
@@ -117,9 +114,7 @@ export default function Contacto() {
         </div>
 
         <div className="mb-3">
-          <label className="form-label" htmlFor="email">
-            Correo*
-          </label>
+          <label className="form-label" htmlFor="email">Correo*</label>
           <input
             id="email"
             type="email"
@@ -133,11 +128,9 @@ export default function Contacto() {
           />
         </div>
 
-        {/* Teléfono (opcional). Agrega required si lo quieres obligatorio */}
+        {/* Teléfono (opcional) */}
         <div className="mb-3">
-          <label className="form-label" htmlFor="phone">
-            Teléfono
-          </label>
+          <label className="form-label" htmlFor="phone">Teléfono</label>
           <input
             id="phone"
             type="tel"
@@ -148,14 +141,11 @@ export default function Contacto() {
             onChange={onChange}
             placeholder="+56 9 1234 5678"
             disabled={loading}
-            // required
           />
         </div>
 
         <div className="mb-4">
-          <label className="form-label" htmlFor="message">
-            Mensaje*
-          </label>
+          <label className="form-label" htmlFor="message">Mensaje*</label>
           <textarea
             id="message"
             className="form-control"
@@ -173,7 +163,8 @@ export default function Contacto() {
           type="submit"
           className="btn-brand-white btn-xxl"
           disabled={loading}
-          style={{ backgroundColor: "#fff", color: "var(--color-primary)" }}>
+          style={{ backgroundColor: "#fff", color: "var(--color-primary)" }}
+        >
           {loading ? "Enviando..." : "Enviar mensaje"}
         </Button>
       </form>
