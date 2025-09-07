@@ -1,7 +1,11 @@
+// src/pages/CotizadorWizard.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { Container, Card, Button, ProgressBar, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "./CotizadorWizard.css";
+
+// ⬇️ NUEVO: guardamos el wizard en sessionStorage + localStorage
+import { saveWizard } from "../services/wizardStore";
 
 const BRANCHES = {
   start: [
@@ -35,7 +39,7 @@ const BRANCHES = {
     },
     {
       key: "cantidad",
-      type: "number", // input numérico
+      type: "number",
       question:
         "¿Qué cantidad estimada necesitas para la primera producción? (mínimo 500 L)",
       min: 500,
@@ -63,7 +67,7 @@ const BRANCHES = {
     },
     {
       key: "Cantidad a producir",
-      type: "number", // input numérico
+      type: "number",
       question: "Cantidad de latas que necesitas (mínimo 500)",
       min: 500,
       unit: "unidades",
@@ -78,7 +82,7 @@ const BRANCHES = {
     },
     {
       key: "Cantidad a producir",
-      type: "number", // input numérico
+      type: "number",
       question: "Cantidad de latas que necesitas (enlatado 473cc, mínimo 500)",
       min: 500,
       unit: "unidades",
@@ -159,7 +163,10 @@ export default function CotizadorWizard() {
         branchLabel: CATEGORY_LABELS[branch],
         answers: nextAnswers,
       };
-      sessionStorage.setItem("wizardData", JSON.stringify(payload));
+
+      // ⬇️ CAMBIO CLAVE: persistimos en sessionStorage + localStorage
+      saveWizard(payload);
+
       navigate("/login");
     }
   };
@@ -229,7 +236,8 @@ export default function CotizadorWizard() {
                       key={value}
                       variant="light"
                       className="wizard-option"
-                      onClick={() => selectOption(value)}>
+                      onClick={() => selectOption(value)}
+                    >
                       {label}
                     </Button>
                   );

@@ -5,8 +5,8 @@ dist/
 *.log
 
 # Entornos
+.example
 .env
-.env.*
 !.env.example
 
 # Hostinger storage y config (nunca versionar)

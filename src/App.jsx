@@ -16,6 +16,8 @@ import Proposal from "./pages/Proposal.jsx";
 import Contacto from "./pages/Contacto.jsx";
 import CotizadorWizard from "./pages/CotizadorWizard.jsx";
 import Login from "./pages/Login.jsx";
+import AuthCallback from "./pages/AuthCallback.jsx";
+
 
 export default function App() {
   return (
@@ -31,6 +33,7 @@ export default function App() {
         <Route path="/terminos" element={<Terminos />} />
         <Route path="/privacidad" element={<Privacidad />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
       </Routes>
 
       <Footer />

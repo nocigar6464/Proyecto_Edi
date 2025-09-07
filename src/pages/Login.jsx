@@ -1,99 +1,105 @@
+// src/pages/Login.jsx
 import { useEffect, useState } from "react";
+import { Container, Card, Form, Button, Alert } from "react-bootstrap";
 
-const RECAPTCHA_SITE_KEY =
-  import.meta.env.VITE_RECAPTCHA_SITE_KEY || "TU_SITE_KEY_PUBLICO";
+const API_URL = import.meta.env.VITE_API_URL || "";
+const RECAPTCHA_SITE_KEY = (import.meta.env.VITE_RECAPTCHA_SITE_KEY || "").trim();
+const HAS_RECAPTCHA = RECAPTCHA_SITE_KEY.length > 0;
 
 export default function Login() {
-  const [rcReady, setRcReady] = useState(false);
+  const [rcReady, setRcReady] = useState(!HAS_RECAPTCHA);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const [okMsg, setOkMsg] = useState("");
 
-  // Cargar el script UNA vez y marcar ready sólo cuando realmente esté listo
+  // Cargar reCAPTCHA sólo si hay key
   useEffect(() => {
-    // Ya cargado previamente
+    if (!HAS_RECAPTCHA) return;
+
     if (window.grecaptcha?.execute) {
-      setRcReady(true);
+      window.grecaptcha.ready(() => setRcReady(true));
       return;
     }
-
     const s = document.createElement("script");
-    s.src = `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(
-      RECAPTCHA_SITE_KEY
-    )}`;
+    s.src = `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(RECAPTCHA_SITE_KEY)}`;
     s.async = true;
-    s.onload = () => {
-      // Esperar a grecaptcha.ready antes de usar execute
-      window.grecaptcha.ready(() => setRcReady(true));
+    s.onload = () => window.grecaptcha.ready(() => setRcReady(true));
+    s.onerror = () => {
+      setRcReady(true); // en dev no bloqueamos
+      setError("No se pudo cargar reCAPTCHA (ignorado en desarrollo).");
     };
-    s.onerror = () => setError("No se pudo cargar reCAPTCHA.");
     document.head.appendChild(s);
-
-    return () => {
-      // opcional: no lo quitamos para permitir reuso en otras páginas
-    };
   }, []);
 
-  const handleSubmit = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-
+    setOkMsg("");
     try {
-      if (!rcReady || !window.grecaptcha?.execute) {
-        setError(
-          "reCAPTCHA aún no está listo. Intenta de nuevo en 1–2 segundos."
-        );
-        return;
-      }
-
       setLoading(true);
-
-      // Asegura que grecaptcha esté “ready” justo antes de execute
-      await new Promise((res) => window.grecaptcha.ready(res));
-      const token = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, {
-        action: "request_link",
-      });
-
-      // Envía email + token al backend
-      const fd = new FormData();
-      fd.append("email", email);
-      fd.append("recaptcha", token);
-
-      // Si pruebas contra tu dominio en prod:
-      // const res = await fetch("https://canlab.cl/auth/request_link.php", { method: "POST", body: fd, credentials: "include" });
-      const res = await fetch("/auth/request_link.php", {
-        method: "POST",
-        body: fd,
-        credentials: "include",
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || "No pudimos enviar el enlace.");
+      let recaptchaToken;
+      if (HAS_RECAPTCHA && window.grecaptcha?.execute) {
+        await new Promise((res) => window.grecaptcha.ready(res));
+        recaptchaToken = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "request_link" });
       }
-
-      // mostrar feedback, etc.
-      alert("Te enviamos un enlace de verificación a tu correo 🙌");
+      const res = await fetch(`${API_URL}/api/auth/request-link`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, recaptchaToken }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.ok) throw new Error(data?.error || "No pudimos enviar el enlace.");
+      setOkMsg("Te enviamos un enlace de verificación a tu correo 🙌");
     } catch (err) {
       setError(err.message || "Error enviando el enlace.");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="email"
-        placeholder="tu@correo.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <button type="submit" disabled={loading || !rcReady}>
-        {loading ? "Enviando..." : "Recibir enlace"}
-      </button>
-      {error && <p style={{ color: "crimson" }}>{error}</p>}
-    </form>
+    <Container className="py-5" style={{ maxWidth: 680 }}>
+      <style>{`
+        .login-card { border-radius: 12px; max-width: 600px; }
+        .login-title { font-weight: 700; font-size: 1.5rem; text-align:center; }
+        .login-sub { color:#6c757d; text-align:center; font-size: .95rem; }
+        .login-btn { font-weight: 600; padding:.625rem 1rem; } /* más bajo que el lg */
+      `}</style>
+
+      <Card className="shadow-sm login-card mx-auto">
+        <Card.Body className="p-4">
+          <h3 className="login-title mb-2">Verifica tu correo</h3>
+          <p className="login-sub mb-4">
+            Te enviaremos un enlace para continuar a tu propuesta.
+          </p>
+
+          {okMsg && <Alert variant="success" className="mb-3">{okMsg}</Alert>}
+          {error && <Alert variant="danger" className="mb-3">{error}</Alert>}
+
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className="mb-3" controlId="loginEmail">
+              <Form.Label>Correo</Form.Label>
+              <Form.Control
+                type="email"
+                placeholder="tucorreo@dominio.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </Form.Group>
+
+            <Button
+              type="submit"
+              className="w-100 login-btn"
+              disabled={loading || (HAS_RECAPTCHA && !rcReady)}
+            >
+              {loading ? "Enviando..." : "Enviar enlace"}
+            </Button>
+          </Form>
+        </Card.Body>
+      </Card>
+    </Container>
   );
 }

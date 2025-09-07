@@ -1,94 +1,108 @@
 // src/pages/Proposal.jsx
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Container, Card } from "react-bootstrap";
 import Financiamiento from "../components/Financiamiento";
 import Listado from "../components/Listado";
+import { loadWizard } from "../services/wizardStore";
+import { api } from "../services/api";
 
-function pickImage(branch, answers) {
+// === Imágenes (como en el carrusel) ===
+import imgBeer from "../assets/images/cerveza.png";
+import imgBeerAlt from "../assets/images/cerveza_lajoda.jpeg"; 
+import imgReady from "../assets/images/readytodrink.png";
+import imgGinTonic from "../assets/images/ejemplo_gintonic.png";
+import imgColdBrew from "../assets/images/coldbrew.png";
+import imgFallback from "../assets/images/can_base.png";
+
+// Elige imagen según ramo/respuestas
+function pickImage(branch, answers = {}) {
   if (branch === "ready") {
-    if (answers.sabor === "Gin Tonic") {
-      if (
-        String(answers.formato || "")
-          .toLowerCase()
-          .includes("350")
-      )
-        return "/images/proposal/ready-gintonic-350.jpg";
-      return "/images/proposal/ready-gintonic.jpg";
-    }
-    return "/images/proposal/ready.jpg";
+    const sabor = String(answers.sabor || "").toLowerCase();
+    if (sabor === "gin tonic") return imgGinTonic || imgReady;
+    return imgReady;
   }
-  if (branch === "coldbrew") return "/images/proposal/coldbrew.jpg";
+  if (branch === "coldbrew") return imgColdBrew;
   if (branch === "beer") {
-    if (answers.estilo === "IPA") return "/images/proposal/beer-ipa.jpg";
-    return "/images/proposal/beer.jpg";
+    const estilo = String(answers.estilo || "").toLowerCase();
+    if (estilo.includes("ipa")) return imgBeerAlt || imgBeer;
+    return imgBeer;
   }
-  return "/images/proposal/default.jpg";
+  return imgFallback;
 }
 
-function extractCantidad(branch, answers) {
-  // ready usa "cantidad" (litros). beer/coldbrew usan "Cantidad a producir" (latas)
+function extractCantidad(answers = {}) {
   return (
-    answers.cantidad ||
-    answers["Cantidad a producir"] ||
-    answers["Cantidad a producir "] ||
+    answers.cantidad ??
+    answers["Cantidad a producir"] ??
+    answers["Cantidad a producir "] ??
     "—"
   );
 }
 
-// Construye el detalle que va justo después de {branchLabel}
-function buildDetails(branch, answers) {
+function buildDetails(branch, answers = {}) {
   const orderMap = {
     ready: ["sabor", "formato"],
     coldbrew: ["leche", "nitro", "mlproducto"],
     beer: ["estilo"],
   };
   const keys = orderMap[branch] || [];
-  const vals = keys
+  return keys
     .map((k) => answers?.[k])
-    .filter((v) => v != null && String(v).trim() !== "");
-  return vals.join(" · ");
-}
-
-// Verifica cookie de autenticación puesta por verify.php (dominio real)
-function hasAuthCookie() {
-  return document.cookie.split("; ").some((c) => c.startsWith("canlab_auth=1"));
+    .filter((v) => v != null && String(v).trim() !== "")
+    .join(" · ");
 }
 
 export default function Proposal() {
   const { state } = useLocation();
   const navigate = useNavigate();
 
-  // 1) Proteger ruta: si no hay cookie de verificación, ir a /login
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authOk, setAuthOk] = useState(false);
+
   useEffect(() => {
-    if (!hasAuthCookie()) navigate("/login");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let mounted = true;
+    (async () => {
+      try {
+        const s = await api.status();
+        if (!mounted) return;
+        setAuthOk(Boolean(s?.authenticated));
+      } catch {
+        if (!mounted) return;
+        setAuthOk(false);
+      } finally {
+        if (mounted) setAuthChecked(true);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  // 2) Si no viene state (caso típico tras clic del mail), recuperar wizardData del sessionStorage
+  // Si no viene state (clic desde correo), trae del store (sessionStorage/localStorage)
   const data = useMemo(() => {
     if (state?.answers) return state;
-    try {
-      const stored = sessionStorage.getItem("wizardData");
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
+    return loadWizard();
   }, [state]);
 
-  // 3) Si (aun verificado) no hay datos de propuesta, volver al cotizador
+  // Redirecciones según estado
   useEffect(() => {
-    if (hasAuthCookie() && !data?.answers) {
-      navigate("/cotizador");
+    if (!authChecked) return;
+    if (!authOk) {
+      navigate("/login", { replace: true });
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+    if (authOk && !data?.answers) {
+      navigate("/cotizador", { replace: true });
+    }
+  }, [authChecked, authOk, data, navigate]);
 
-  if (!data?.answers) return null;
+
+  if (!authChecked || !authOk || !data?.answers) return null;
 
   const { branch, branchLabel, answers } = data;
   const img = pickImage(branch, answers);
-  const qty = extractCantidad(branch, answers);
+  const qty = extractCantidad(answers);
   const details = buildDetails(branch, answers);
 
   return (
@@ -98,16 +112,20 @@ export default function Proposal() {
       <div className="mb-4">
         <h2 className="h4 mb-3 text-center">
           Tu producción de <strong>{branchLabel}</strong>
-          {details && (
+          {details ? (
             <>
               {" "}
               — <span className="text-muted">{details}</span>
             </>
-          )}
+          ) : null}
         </h2>
 
         <Card className="shadow-sm">
-          <Card.Img src={img} alt={`${branchLabel}`} />
+          <Card.Img
+            src={img}
+            alt={branchLabel}
+            style={{ maxHeight: 320, objectFit: "cover" }}
+          />
           <Card.Body>
             <p className="mb-0">
               <strong>Cantidad seleccionada:</strong> {qty}
