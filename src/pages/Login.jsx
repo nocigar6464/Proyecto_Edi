@@ -5,6 +5,7 @@ import { Container, Card, Form, Button, Alert } from "react-bootstrap";
 const API_URL = import.meta.env.VITE_API_URL || "";
 const RECAPTCHA_SITE_KEY = (import.meta.env.VITE_RECAPTCHA_SITE_KEY || "").trim();
 const HAS_RECAPTCHA = RECAPTCHA_SITE_KEY.length > 0;
+const IS_DEV = import.meta.env.DEV;
 
 export default function Login() {
   const [rcReady, setRcReady] = useState(!HAS_RECAPTCHA);
@@ -21,13 +22,14 @@ export default function Login() {
       window.grecaptcha.ready(() => setRcReady(true));
       return;
     }
+
     const s = document.createElement("script");
     s.src = `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(RECAPTCHA_SITE_KEY)}`;
     s.async = true;
     s.onload = () => window.grecaptcha.ready(() => setRcReady(true));
     s.onerror = () => {
-      setRcReady(true); // en dev no bloqueamos
-      setError("No se pudo cargar reCAPTCHA (ignorado en desarrollo).");
+      if (IS_DEV) console.warn("reCAPTCHA no se pudo cargar; ignorado en desarrollo.");
+      setRcReady(true); // no bloqueamos el submit
     };
     document.head.appendChild(s);
   }, []);
@@ -36,21 +38,26 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setOkMsg("");
+
     try {
       setLoading(true);
+
       let recaptchaToken;
       if (HAS_RECAPTCHA && window.grecaptcha?.execute) {
         await new Promise((res) => window.grecaptcha.ready(res));
         recaptchaToken = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "request_link" });
       }
+
       const res = await fetch(`${API_URL}/api/auth/request-link`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, recaptchaToken }),
       });
+
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.ok) throw new Error(data?.error || "No pudimos enviar el enlace.");
+
       setOkMsg("Te enviamos un enlace de verificación a tu correo 🙌");
     } catch (err) {
       setError(err.message || "Error enviando el enlace.");
@@ -65,7 +72,7 @@ export default function Login() {
         .login-card { border-radius: 12px; max-width: 600px; }
         .login-title { font-weight: 700; font-size: 1.5rem; text-align:center; }
         .login-sub { color:#6c757d; text-align:center; font-size: .95rem; }
-        .login-btn { font-weight: 600; padding:.625rem 1rem; } /* más bajo que el lg */
+        .login-btn { font-weight: 600; padding:.625rem 1rem; }
       `}</style>
 
       <Card className="shadow-sm login-card mx-auto">
