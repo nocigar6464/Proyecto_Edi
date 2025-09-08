@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Row, Col, Card, Button, Alert, Spinner } from "react-bootstrap";
 import { api } from "../services/api";
 
-const PRICE_URL = "/public_html/pricing.json";
+const PRICE_URL = `${import.meta.env.BASE_URL || "/"}pricing.json`;
 
 function formatCLP(n) {
   return new Intl.NumberFormat("es-CL", {
